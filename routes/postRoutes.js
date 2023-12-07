@@ -5,9 +5,11 @@ import {
   deletePostController,
   getAdminPostController,
   getApprovedPostController,
+  getTopPosts,
   getUserPostController,
   hightoLowRentController,
   lowtoHighRentController,
+  postReviewController,
   updatePostStatusController,
 } from "../controllers/postController.js";
 import { isAdmin, isAuth } from "../middlewares/authMiddleware.js";
@@ -25,6 +27,9 @@ router.get("/get-admin-all-post", getAdminPostController);
 
 //GET ALL APPROVED POSTS
 router.get("/get-approved-posts", getApprovedPostController);
+
+//GET TOP POSTS
+router.get("/get-top-posts", getTopPosts);
 
 //Approve post by admin
 router.put("/approve-post/:id", isAuth, isAdmin, updatePostStatusController);
@@ -44,6 +49,9 @@ router.post("/discount", isAuth, isAdmin, allPostDiscountController);
 //FILTERS
 router.get("/filters/low-to-high-rent", lowtoHighRentController);
 router.get("/filters/high-to-low-rent", hightoLowRentController);
+
+//Post Reviews
+router.put("/:id/reviews", isAuth, postReviewController);
 
 //EXPORT
 export default router;

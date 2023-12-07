@@ -103,14 +103,22 @@ export const getAdminPostController = async (req, res) => {
 //GET ALL APPROVED POSTS
 export const getApprovedPostController = async (req, res) => {
   try {
+    const { keyword } = req.query;
     const approvedPosts = await postModel
-      .find({ status: "approved" })
+      .find({
+        status: "approved",
+        name: {
+          $regex: keyword ? keyword : "",
+          $options: "i",
+        },
+      })
       .populate("postedBy", "_id name")
       .sort({ createdAt: -1 });
 
     res.status(200).send({
       success: true,
       message: "All Approved Posts Data",
+      totalPosts: approvedPosts.length,
       posts: approvedPosts,
     });
   } catch (error) {
@@ -118,6 +126,24 @@ export const getApprovedPostController = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Error in fetching approved posts",
+      error,
+    });
+  }
+};
+//GET TOP POSTS
+export const getTopPosts = async (req, res) => {
+  try {
+    const posts = await postModel.find({}).sort({ rating: -1 });
+    res.status(200).send({
+      success: true,
+      message: "Top Rated Posts",
+      posts,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in Top Posts",
       error,
     });
   }
@@ -326,6 +352,58 @@ export const allPostDiscountController = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Error in applying discount.",
+      error,
+    });
+  }
+};
+//REVIEWS Comment
+export const postReviewController = async (req, res) => {
+  try {
+    const { comment, rating } = req.body;
+    // find post
+    const post = await postModel.findById(req.params.id);
+    // check previous review
+    const alreadyReviewed = post.reviews.find(
+      (r) => r.user.toString() === req.user._id.toString()
+    );
+    if (alreadyReviewed) {
+      return res.status(400).send({
+        success: false,
+        message: "post Already Reviewed",
+      });
+    }
+    // review object
+    const review = {
+      name: req.user.name,
+      rating: Number(rating),
+      comment,
+      user: req.user._id,
+    };
+    // passing review object to reviews array
+    post.reviews.push(review);
+    // number or reviews
+    post.numReviews = post.reviews.length;
+    post.rating =
+      post.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      post.reviews.length;
+    // save
+    await post.save();
+    res.status(200).send({
+      success: true,
+      message: "Review Added!",
+    });
+  } catch (error) {
+    console.log(error);
+    // cast error ||  OBJECT ID
+    if (error.name === "CastError") {
+      return res.status(500).send({
+        success: false,
+        message: "Invalid Id",
+      });
+    }
+    res.status(500).send({
+      success: false,
+      message: "Error In Review Comment API",
       error,
     });
   }

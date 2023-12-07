@@ -40,13 +40,13 @@ router.put("/update-password", isAuth, udpatePasswordController);
 router.put("/update-image", isAuth, singleUpload, updateProfilePicController);
 
 //DELETE USER ADMIN ONLY
-router.delete('/delete-user/:userId', isAuth,isAdmin, deleteUserController)
+router.delete("/delete-user/:userId", isAuth, isAdmin, deleteUserController);
 
 //GET ALL USER isAuth, , isAdmin
 router.get("/get-all-users", getAllUserController);
 
 //UPDATE User role
-router.put('/updateUserRole',isAuth,isAdmin, updateUserRoleController);
+router.put("/updateUserRole", isAuth, isAdmin, updateUserRoleController);
 
 //export
 export default router;
