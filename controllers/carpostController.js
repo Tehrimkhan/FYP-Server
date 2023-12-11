@@ -164,3 +164,35 @@ export const paymentController = async (req, res) => {
     });
   }
 };
+
+//stripePaymentController
+export const stripePaymentController = async (req, res) => {
+  try {
+    const data = req.body;
+    const deductionAmount = Math.round(data.rent * 100 * 0.05);
+
+    const lineItem = {
+      price_data: {
+        currency: "pkr",
+        product_data: {
+          name: data.name,
+        },
+        unit_amount: deductionAmount,
+      },
+      quantity: 1,
+    };
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [lineItem],
+      mode: "payment",
+      success_url: data.success_url || "http://localhost:19006/Dashboard",
+      cancel_url: data.cancel_url || "http://localhost:19006/MyAdsPage",
+    });
+
+    res.status(200).json({ id: session.id });
+  } catch (error) {
+    console.error("Error in stripePaymentController:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};

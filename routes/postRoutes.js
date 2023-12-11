@@ -14,7 +14,10 @@ import {
 } from "../controllers/postController.js";
 import { isAdmin, isAuth } from "../middlewares/authMiddleware.js";
 import { multipleUpload } from "../middlewares/multer.js";
-import { paymentController } from "../controllers/carpostController.js";
+import {
+  paymentController,
+  stripePaymentController,
+} from "../controllers/carpostController.js";
 
 //ROUTER OBJECT
 const router = express.Router();
@@ -42,6 +45,8 @@ router.delete("/delete-post/:id", isAuth, deletePostController);
 
 //ACCEPT SUBSCRIPTION
 router.post("/payments", isAuth, paymentController);
+
+router.post("/create-checkout-session", stripePaymentController);
 
 //Discount
 router.post("/discount", isAuth, isAdmin, allPostDiscountController);
