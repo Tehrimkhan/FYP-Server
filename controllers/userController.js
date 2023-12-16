@@ -1,6 +1,51 @@
 import userModel from "../models/userModel.js";
 import cloudinary from "cloudinary";
 import { getDataUri } from "../utils/feature.js";
+import multer from "multer";
+
+// const imgconfig = multer.diskStorage({
+//   destination: (req, file, callback) => {
+//     callback(null, "./uploads");
+//   },
+//   filename: (req, file, callback) => {
+//     callback(null, `image-${Date.now()}.${file.originalname}`);
+//   },
+// });
+
+// const isImage = (req, file, callback) => {
+//   if (file.mimetype.startsWith("image")) {
+//     callback(null, true);
+//   } else {
+//     callback(new Error("only image is allow"));
+//   }
+// };
+// export const upload = multer({
+//   storage: imgconfig,
+//   fileFilter: isImage,
+// });
+export const UploadImageController = async (req, res) => {
+  const cloudinaryResponse = req.body;
+
+  // Handle the Cloudinary response here, for example, store it in a database
+  // You can replace this with your own logic based on your backend requirements
+
+  console.log("Cloudinary Response:", cloudinaryResponse);
+
+  // Respond with a success message
+  res.status(200).json({ message: "Cloudinary response stored successfully" });
+};
+
+//UPLAOD IMAGE
+// export const uploadUserImage = async (req, res) => {
+//   try {
+//     console.log("Request Body:", req.body);
+//     console.log("Uploaded file:", req.file);
+//     res.status(200).json({ message: "File uploaded successfully" });
+//   } catch (error) {
+//     console.error("Error uploading file:", error);
+//     res.status(500).json({ message: "Error uploading file" });
+//   }
+// };
 
 //REGISTER
 export const registerController = async (req, res) => {
@@ -212,12 +257,21 @@ export const updateProfilePicController = async (req, res) => {
     if (user.profileImage && user.profileImage.public_id) {
       await cloudinary.v2.uploader.destroy(user.profileImage.public_id);
     }
+    console.log(req.file);
+    // Check if req.file is available
+    if (!req.file) {
+      console.error("No file uploaded");
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
+    }
 
     // FILE GET FROM CLIENT PHOTO
-    const file = getDataUri(req.file);
+    const fileDataUri = getDataUri(req.file);
+    console.log(fileDataUri);
 
     // UPDATE
-    const cdb = await cloudinary.v2.uploader.upload(file.content);
+    const cdb = await cloudinary.v2.uploader.upload(fileDataUri.content);
     user.profileImage = {
       public_id: cdb.public_id,
       url: cdb.secure_url,
@@ -231,7 +285,7 @@ export const updateProfilePicController = async (req, res) => {
       message: "Profile Picture Updated!",
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error in Update Profile Image API:", error);
     res.status(500).send({
       success: false,
       message: "Error In Update Profile Image API",

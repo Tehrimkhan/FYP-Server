@@ -1,5 +1,7 @@
 import express from "express";
+import multer from "multer";
 import {
+  UploadImageController,
   deleteUserController,
   getAllUserController,
   getUserProfileController,
@@ -13,6 +15,9 @@ import {
 } from "../controllers/userController.js";
 import { isAdmin, isAuth } from "../middlewares/authMiddleware.js";
 import { singleUpload } from "../middlewares/multer.js";
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 //ROUTER object
 const router = express.Router();
@@ -37,7 +42,9 @@ router.put("/profile-update", isAuth, updateProfileController);
 router.put("/update-password", isAuth, udpatePasswordController);
 
 //UPDATE - ProfileImage//isAuth,
-router.put("/update-image", isAuth, singleUpload, updateProfilePicController);
+// router.put("/update-image", isAuth, singleUpload, updateProfilePicController);
+// router.post("/upload-image", upload.single("photo"), uploadUserImage);
+router.post("/storeCloudinaryResponse", UploadImageController);
 
 //DELETE USER ADMIN ONLY
 router.delete("/delete-user/:userId", isAuth, isAdmin, deleteUserController);

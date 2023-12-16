@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -29,6 +30,9 @@ const userSchema = new mongoose.Schema(
         url: String,
       },
     ],
+    imgpath: {
+      type: String,
+    },
     role: {
       type: String,
       default: "Users",
