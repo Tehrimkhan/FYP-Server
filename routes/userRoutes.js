@@ -44,7 +44,7 @@ router.put("/update-password", isAuth, udpatePasswordController);
 //UPDATE - ProfileImage//isAuth,
 // router.put("/update-image", isAuth, singleUpload, updateProfilePicController);
 // router.post("/upload-image", upload.single("photo"), uploadUserImage);
-router.post("/storeCloudinaryResponse", UploadImageController);
+router.post("/upload-profile-image", isAuth, UploadImageController);
 
 //DELETE USER ADMIN ONLY
 router.delete("/delete-user/:userId", isAuth, isAdmin, deleteUserController);

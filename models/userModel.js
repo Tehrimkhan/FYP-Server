@@ -2,6 +2,29 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
 
+const cloudinaryImageSchema = new mongoose.Schema({
+  asset_id: String,
+  bytes: Number,
+  created_at: Date,
+  etag: String,
+  folder: String,
+  format: String,
+  height: Number,
+  original_extension: String,
+  original_filename: String,
+  placeholder: Boolean,
+  public_id: String,
+  resource_type: String,
+  secure_url: String,
+  signature: String,
+  tags: [String],
+  type: String,
+  url: String,
+  version: Number,
+  version_id: String,
+  width: Number,
+});
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -16,23 +39,14 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is Required!"],
-      minLength: [6, "Password should be greater then 6 characters!"],
+      minLength: [6, "Password should be greater than 6 characters!"],
     },
     confirmPassword: {
       type: String,
       required: [true, "Password is not Same!"],
-      minLength: [6, "Password should be greater then 6 characters!"],
+      minLength: [6, "Password should be greater than 6 characters!"],
     },
-    profileImage: [
-      {
-        // type: String,
-        public_id: String,
-        url: String,
-      },
-    ],
-    imgpath: {
-      type: String,
-    },
+    profileImage: [cloudinaryImageSchema], // Array of Cloudinary response objects
     role: {
       type: String,
       default: "Users",

@@ -24,17 +24,24 @@ import multer from "multer";
 //   fileFilter: isImage,
 // });
 export const UploadImageController = async (req, res) => {
-  const cloudinaryResponse = req.body;
+  try {
+    const cloudinaryResponse = req.body.cloudinaryResponse;
+    console.log("data reached backend", cloudinaryResponse);
 
-  // Handle the Cloudinary response here, for example, store it in a database
-  // You can replace this with your own logic based on your backend requirements
+    const user = await userModel.findById(req.user._id);
 
-  console.log("Cloudinary Response:", cloudinaryResponse);
+    user.profileImage = [];
 
-  // Respond with a success message
-  res.status(200).json({ message: "Cloudinary response stored successfully" });
+    user.profileImage.push(cloudinaryResponse);
+
+    await user.save();
+
+    res.status(200).json({ message: "Profile image uploaded successfully" });
+  } catch (error) {
+    console.error("Error uploading profile image:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
-
 //UPLAOD IMAGE
 // export const uploadUserImage = async (req, res) => {
 //   try {
