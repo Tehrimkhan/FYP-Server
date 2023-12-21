@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is not Same!"],
       minLength: [6, "Password should be greater than 6 characters!"],
     },
-    profileImage: [cloudinaryImageSchema], // Array of Cloudinary response objects
+    profileImage: [cloudinaryImageSchema], 
     role: {
       type: String,
       default: "Users",

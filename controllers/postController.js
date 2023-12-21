@@ -1,4 +1,5 @@
 import postModel from "../models/postModel.js";
+import PaymentTransactionModel from "../models/paymentTransactionModel.js";
 import cloudinary from "cloudinary";
 import { getDataUri } from "../utils/feature.js";
 import schedule from "node-schedule";
@@ -248,40 +249,39 @@ export const deletePostController = async (req, res) => {
 };
 
 //PAYMENT CONTROLLER paymentController
-export const paymentController = async (req, res) => {
-  try {
-    //get amount
-    const { rent, name } = req.body;
-    //VALIDATION
-    if (!rent && !name) {
-      res.status(404).send({
-        success: false,
-        message: "Name And Total Amount Is Required!",
-      });
-    }
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(rent * 100),
-      currency: "usd",
-      payment_method_types: ["card"],
-      metadata: { name, rent },
-    });
-    const client_secret = paymentIntent.client_secret;
-    res.status(200).send({
-      success: true,
-      message: "PAYMENT IS DONE!",
-      client_secret,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      success: false,
-      message: "Error PAYMENT API",
-      error,
-    });
-  }
-};
+// export const paymentController = async (req, res) => {
+//   try {
+//     //get amount
+//     const { rent, name } = req.body;
+//     //VALIDATION
+//     if (!rent && !name) {
+//       res.status(404).send({
+//         success: false,
+//         message: "Name And Total Amount Is Required!",
+//       });
+//     }
+//     const paymentIntent = await stripe.paymentIntents.create({
+//       amount: Math.round(rent * 100),
+//       currency: "usd",
+//       payment_method_types: ["card"],
+//       metadata: { name, rent },
+//     });
+//     const client_secret = paymentIntent.client_secret;
+//     res.status(200).send({
+//       success: true,
+//       message: "PAYMENT IS DONE!",
+//       client_secret,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: false,
+//       message: "Error PAYMENT API",
+//       error,
+//     });
+//   }
+// };
 //Working Payment Controller
-//stripePaymentController
 export const stripePaymentController = async (req, res) => {
   try {
     const data = req.body;
@@ -302,14 +302,45 @@ export const stripePaymentController = async (req, res) => {
       payment_method_types: ["card"],
       line_items: [lineItem],
       mode: "payment",
-      success_url: data.success_url || "http://localhost:19006/Dashboard",
-      cancel_url: data.cancel_url || "http://localhost:19006/MyAdsPage",
+      success_url: data.success_url || "http://127.0.0.1:19006/MyAdsPage",
+      cancel_url: data.cancel_url || "http://127.0.0.1:19006/MyAdsPage",
     });
+
+    // Log payment information to the database
+    const paymentTransaction = await PaymentTransactionModel({
+      paymentId: session.id,
+      totalamount: data.rent,
+      percentage: deductionAmount,
+      currency: "pkr",
+      productName: data.name,
+      paymentStatus: "pending",
+    }).save();
 
     res.status(200).json({ id: session.id });
   } catch (error) {
     console.error("Error in stripePaymentController:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+// Fetch all payment transactions
+export const getAllPaymentTransactionsController = async (req, res) => {
+  try {
+    const paymentTransactions = await PaymentTransactionModel.find().sort({
+      createdAt: -1,
+    });
+    console.log("transaction detail", paymentTransactions);
+    res.status(200).send({
+      success: true,
+      message: "All Payment Transactions Data",
+      paymentTransactions,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in fetching payment transactions",
+      error,
+    });
   }
 };
 
@@ -389,53 +420,155 @@ export const allPostDiscountController = async (req, res) => {
   }
 };
 //REVIEWS Comment
-export const postReviewController = async (req, res) => {
+// export const postReviewController = async (req, res) => {
+//   try {
+//     const { comment, rating } = req.body;
+//     // find post
+//     const post = await postModel.findById(req.params.id);
+
+//     // Check if the user has already provided a rating
+//     const alreadyRated = post.reviews.some(
+//       (r) => r.user.toString() === req.user._id.toString() && r.rating !== undefined
+//     );
+
+//     // If the user is adding a rating for the first time, and comment is not provided
+//     if (!alreadyRated && rating !== undefined && comment === undefined) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Please provide a comment along with the initial rating.",
+//       });
+//     }
+
+//     // Review or comment object
+//     const reviewOrComment = {
+//       name: req.user.name,
+//       rating: rating !== undefined ? Number(rating) : undefined,
+//       comment: comment || (rating === undefined ? "No comment" : undefined),
+//       user: req.user._id,
+//     };
+
+//     // If the user is adding a rating for the first time, push the new review or comment
+//     if (!alreadyRated) {
+//       post.reviews.push(reviewOrComment);
+//     } else {
+//       // If the user has already rated, update the existing rating
+//       const existingReview = post.reviews.find(
+//         (r) => r.user.toString() === req.user._id.toString() && r.rating !== undefined
+//       );
+//       existingReview.rating = Number(rating);
+//     }
+
+//     // Number of reviews
+//     post.numReviews = post.reviews.length;
+
+//     // Calculate average rating only for reviews with ratings
+//     const ratedReviews = post.reviews.filter((r) => r.rating !== undefined);
+//     post.rating = ratedReviews.reduce((acc, item) => item.rating + acc, 0) / ratedReviews.length;
+
+//     // Save
+//     await post.save();
+
+//     res.status(200).send({
+//       success: true,
+//       message: "Review or comment added!",
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     // Cast error || OBJECT ID
+//     if (error.name === "CastError") {
+//       return res.status(500).send({
+//         success: false,
+//         message: "Invalid Id",
+//       });
+//     }
+//     res.status(500).send({
+//       success: false,
+//       message: "Error in Review or Comment API",
+//       error,
+//     });
+//   }
+// };
+export const postCommentController = async (req, res) => {
   try {
-    const { comment, rating } = req.body;
-    // find post
+    const { comment } = req.body;
     const post = await postModel.findById(req.params.id);
-    // check previous review
-    const alreadyReviewed = post.reviews.find(
-      (r) => r.user.toString() === req.user._id.toString()
-    );
-    if (alreadyReviewed) {
-      return res.status(400).send({
-        success: false,
-        message: "post Already Reviewed",
-      });
-    }
-    // review object
-    const review = {
+
+    // Ensure that post.comments is initialized as an array
+    post.comments = post.comments || [];
+
+    // Comment object
+    const commentObject = {
       name: req.user.name,
-      rating: Number(rating),
-      comment,
+      comment: comment || "No comment",
       user: req.user._id,
     };
-    // passing review object to reviews array
-    post.reviews.push(review);
-    // number or reviews
-    post.numReviews = post.reviews.length;
-    post.rating =
-      post.reviews.reduce((acc, item) => item.rating + acc, 0) /
-      post.reviews.length;
-    // save
+
+    // Push the new comment
+    post.comments.push(commentObject);
+
+    // Save
     await post.save();
+
     res.status(200).send({
       success: true,
-      message: "Review Added!",
+      message: "Comment added!",
     });
   } catch (error) {
     console.log(error);
-    // cast error ||  OBJECT ID
-    if (error.name === "CastError") {
-      return res.status(500).send({
-        success: false,
-        message: "Invalid Id",
-      });
-    }
+    // Handle errors, e.g., CastError or other custom error handling
     res.status(500).send({
       success: false,
-      message: "Error In Review Comment API",
+      message: "Error in Comment API",
+      error,
+    });
+  }
+};
+
+export const postRatingController = async (req, res) => {
+  try {
+    const { rating } = req.body;
+    const post = await postModel.findById(req.params.id);
+
+    // Ensure that post.reviews is defined and is an array
+    post.reviews = post.reviews || [];
+
+    // Check if the user has already provided a rating
+    const alreadyRated = post.reviews.some(
+      (r) =>
+        r.user.toString() === req.user._id.toString() && r.rating !== undefined
+    );
+
+    // If the user is adding a rating for the first time
+    if (!alreadyRated) {
+      // Rating object
+      const ratingObject = {
+        name: req.user.name,
+        rating: rating !== undefined ? Number(rating) : undefined,
+        user: req.user._id,
+      };
+
+      // Push the new rating
+      post.reviews.push(ratingObject);
+
+      // Save
+      await post.save();
+
+      res.status(200).send({
+        success: true,
+        message: "Rating added!",
+      });
+    } else {
+      res.status(400).send({
+        success: false,
+        message: "User can provide rating only once.",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    // Handle errors, e.g., CastError or other custom error handling
+    res.status(500).send({
+      success: false,
+      message: "Error in Rating API",
       error,
     });
   }

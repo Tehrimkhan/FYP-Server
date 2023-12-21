@@ -26,7 +26,7 @@ import multer from "multer";
 export const UploadImageController = async (req, res) => {
   try {
     const cloudinaryResponse = req.body.cloudinaryResponse;
-    console.log("data reached backend", cloudinaryResponse);
+    // console.log("data reached backend", cloudinaryResponse);
 
     const user = await userModel.findById(req.user._id);
 

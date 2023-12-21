@@ -1,5 +1,27 @@
 import mongoose from "mongoose";
-
+//Cloudinary response
+const cloudinaryImageSchema = new mongoose.Schema({
+  asset_id: String,
+  bytes: Number,
+  created_at: Date,
+  etag: String,
+  folder: String,
+  format: String,
+  height: Number,
+  original_extension: String,
+  original_filename: String,
+  placeholder: Boolean,
+  public_id: String,
+  resource_type: String,
+  secure_url: String,
+  signature: String,
+  tags: [String],
+  type: String,
+  url: String,
+  version: Number,
+  version_id: String,
+  width: Number,
+});
 //REVIEW MODAL
 const reviewSchema = new mongoose.Schema(
   {
@@ -26,16 +48,7 @@ const reviewSchema = new mongoose.Schema(
 //PRODUCT MODEL
 const postSchema = new mongoose.Schema(
   {
-    postImages: [
-      {
-        public_id: {
-          type: String,
-        },
-        url: {
-          type: String,
-        },
-      },
-    ],
+    postImages: [cloudinaryImageSchema],
     title: {
       type: String,
       required: [true, "Please Add Post Title!"],

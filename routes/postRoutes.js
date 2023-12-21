@@ -4,12 +4,15 @@ import {
   createPostController,
   deletePostController,
   getAdminPostController,
+  getAllPaymentTransactionsController,
   getApprovedPostController,
   getTopPosts,
   getUserPostController,
   hightoLowRentController,
   lowtoHighRentController,
-  postReviewController,
+  postRatingController,
+  postCommentController,
+  // postReviewController,
   stripePaymentController,
   updatePostStatusController,
 } from "../controllers/postController.js";
@@ -45,6 +48,14 @@ router.delete("/delete-post/:id", isAuth, deletePostController);
 router.post("/payments", isAuth, paymentController);
 router.post("/create-checkout-session", stripePaymentController);
 
+//SHOW PAYMENT TO ADMINS
+router.get(
+  "/get-all-payment-transactions",
+  isAuth,
+  isAdmin,
+  getAllPaymentTransactionsController
+);
+
 //Discount
 router.post("/discount", isAuth, isAdmin, allPostDiscountController);
 
@@ -52,8 +63,13 @@ router.post("/discount", isAuth, isAdmin, allPostDiscountController);
 router.get("/filters/low-to-high-rent", lowtoHighRentController);
 router.get("/filters/high-to-low-rent", hightoLowRentController);
 
-//Post Reviews
-router.put("/:id/reviews", isAuth, postReviewController);
+// //Post Reviews
+router.put("/ratings/:id", isAuth, postRatingController);
+// Route for posting comments
+router.put("/comments/:id", isAuth, postCommentController);
+
+// // Route for posting ratings
+// router.put("/ratings/:id", isAuth, postRatingController);
 
 //EXPORT
 export default router;
