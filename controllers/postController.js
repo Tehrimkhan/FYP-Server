@@ -114,11 +114,11 @@ export const getApprovedPostController = async (req, res) => {
         },
       })
       .populate("postedBy", "_id name")
-      .sort({ createdAt: -1 });
+      .sort({ rating: -1 });
 
     res.status(200).send({
       success: true,
-      message: "All Approved Posts Data",
+      message: "All Approved Posts Data sorted by rating",
       totalPosts: approvedPosts.length,
       posts: approvedPosts,
     });
@@ -131,6 +131,35 @@ export const getApprovedPostController = async (req, res) => {
     });
   }
 };
+// export const getApprovedPostController = async (req, res) => {
+//   try {
+//     const { keyword } = req.query;
+//     const approvedPosts = await postModel
+//       .find({
+//         status: "approved",
+//         name: {
+//           $regex: keyword ? keyword : "",
+//           $options: "i",
+//         },
+//       })
+//       .populate("postedBy", "_id name")
+//       .sort({ rent: -1 });
+
+//     res.status(200).send({
+//       success: true,
+//       message: "All Approved Posts Data",
+//       totalPosts: approvedPosts.length,
+//       posts: approvedPosts,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: false,
+//       message: "Error in fetching approved posts",
+//       error,
+//     });
+//   }
+// };
 //GET TOP POSTS
 export const getTopPosts = async (req, res) => {
   try {
@@ -328,7 +357,7 @@ export const getAllPaymentTransactionsController = async (req, res) => {
     const paymentTransactions = await PaymentTransactionModel.find().sort({
       createdAt: -1,
     });
-    console.log("transaction detail", paymentTransactions);
+    // console.log("transaction detail", paymentTransactions);
     res.status(200).send({
       success: true,
       message: "All Payment Transactions Data",
@@ -426,36 +455,39 @@ export const allPostDiscountController = async (req, res) => {
 //     // find post
 //     const post = await postModel.findById(req.params.id);
 
-//     // Check if the user has already provided a rating
-//     const alreadyRated = post.reviews.some(
-//       (r) => r.user.toString() === req.user._id.toString() && r.rating !== undefined
+//     // Find the user's existing reviews
+//     const userReviews = post.reviews.filter(
+//       (r) => r.user.toString() === req.user._id.toString()
 //     );
 
-//     // If the user is adding a rating for the first time, and comment is not provided
-//     if (!alreadyRated && rating !== undefined && comment === undefined) {
-//       return res.status(400).send({
-//         success: false,
-//         message: "Please provide a comment along with the initial rating.",
-//       });
-//     }
-
-//     // Review or comment object
-//     const reviewOrComment = {
-//       name: req.user.name,
-//       rating: rating !== undefined ? Number(rating) : undefined,
-//       comment: comment || (rating === undefined ? "No comment" : undefined),
-//       user: req.user._id,
-//     };
-
-//     // If the user is adding a rating for the first time, push the new review or comment
-//     if (!alreadyRated) {
-//       post.reviews.push(reviewOrComment);
+//     // If the user has already provided a rating, update the existing review
+//     if (userReviews.length > 0 && userReviews[0].rating !== undefined) {
+//       if (rating !== undefined) {
+//         userReviews[0].rating = Number(rating);
+//       }
 //     } else {
-//       // If the user has already rated, update the existing rating
-//       const existingReview = post.reviews.find(
-//         (r) => r.user.toString() === req.user._id.toString() && r.rating !== undefined
-//       );
-//       existingReview.rating = Number(rating);
+//       // If the user is adding a rating for the first time, and comment is not provided
+//       if (
+//         !userReviews.length &&
+//         rating !== undefined &&
+//         comment === undefined
+//       ) {
+//         return res.status(400).send({
+//           success: false,
+//           message: "Please provide a comment along with the initial rating.",
+//         });
+//       }
+
+//       // Review or comment object
+//       const reviewOrComment = {
+//         name: req.user.name,
+//         rating: rating !== undefined ? Number(rating) : undefined,
+//         comment: comment || (rating === undefined ? "No comment" : undefined),
+//         user: req.user._id,
+//       };
+
+//       // Push the new review or comment
+//       post.reviews.push(reviewOrComment);
 //     }
 
 //     // Number of reviews
@@ -463,7 +495,9 @@ export const allPostDiscountController = async (req, res) => {
 
 //     // Calculate average rating only for reviews with ratings
 //     const ratedReviews = post.reviews.filter((r) => r.rating !== undefined);
-//     post.rating = ratedReviews.reduce((acc, item) => item.rating + acc, 0) / ratedReviews.length;
+//     post.rating =
+//       ratedReviews.reduce((acc, item) => item.rating + acc, 0) /
+//       ratedReviews.length;
 
 //     // Save
 //     await post.save();
@@ -491,20 +525,21 @@ export const allPostDiscountController = async (req, res) => {
 export const postCommentController = async (req, res) => {
   try {
     const { comment } = req.body;
+    // find post
     const post = await postModel.findById(req.params.id);
 
-    // Ensure that post.comments is initialized as an array
-    post.comments = post.comments || [];
-
-    // Comment object
-    const commentObject = {
+    // Review or comment object
+    const review = {
       name: req.user.name,
       comment: comment || "No comment",
       user: req.user._id,
     };
 
-    // Push the new comment
-    post.comments.push(commentObject);
+    // Push the new review or comment
+    post.reviews.push(review);
+
+    // Number of reviews
+    post.numReviews = post.reviews.length;
 
     // Save
     await post.save();
@@ -515,7 +550,13 @@ export const postCommentController = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    // Handle errors, e.g., CastError or other custom error handling
+    // Cast error || OBJECT ID
+    if (error.name === "CastError") {
+      return res.status(500).send({
+        success: false,
+        message: "Invalid Id",
+      });
+    }
     res.status(500).send({
       success: false,
       message: "Error in Comment API",
@@ -523,49 +564,60 @@ export const postCommentController = async (req, res) => {
     });
   }
 };
-
 export const postRatingController = async (req, res) => {
   try {
     const { rating } = req.body;
+    // find post
     const post = await postModel.findById(req.params.id);
 
-    // Ensure that post.reviews is defined and is an array
-    post.reviews = post.reviews || [];
-
-    // Check if the user has already provided a rating
-    const alreadyRated = post.reviews.some(
-      (r) =>
-        r.user.toString() === req.user._id.toString() && r.rating !== undefined
+    // Find the user's existing reviews
+    const userReviews = post.reviews.filter(
+      (r) => r.user.toString() === req.user._id.toString()
     );
 
-    // If the user is adding a rating for the first time
-    if (!alreadyRated) {
-      // Rating object
-      const ratingObject = {
-        name: req.user.name,
-        rating: rating !== undefined ? Number(rating) : undefined,
-        user: req.user._id,
-      };
-
-      // Push the new rating
-      post.reviews.push(ratingObject);
-
-      // Save
-      await post.save();
-
-      res.status(200).send({
-        success: true,
-        message: "Rating added!",
-      });
-    } else {
-      res.status(400).send({
+    // If the user has already provided a rating, update the existing review
+    if (userReviews.length > 0 && userReviews[0].rating !== undefined) {
+      return res.status(400).send({
         success: false,
-        message: "User can provide rating only once.",
+        message: "You have already provided a rating for this post.",
       });
     }
+
+    // Review or comment object
+    const review = {
+      name: req.user.name,
+      rating: Number(rating),
+      user: req.user._id,
+    };
+
+    // Push the new review or comment
+    post.reviews.push(review);
+
+    // Number of reviews
+    post.numReviews = post.reviews.length;
+
+    // Calculate average rating only for reviews with ratings
+    const ratedReviews = post.reviews.filter((r) => r.rating !== undefined);
+    post.rating =
+      ratedReviews.reduce((acc, item) => item.rating + acc, 0) /
+      ratedReviews.length;
+
+    // Save
+    await post.save();
+
+    res.status(200).send({
+      success: true,
+      message: "Rating added!",
+    });
   } catch (error) {
     console.log(error);
-    // Handle errors, e.g., CastError or other custom error handling
+    // Cast error || OBJECT ID
+    if (error.name === "CastError") {
+      return res.status(500).send({
+        success: false,
+        message: "Invalid Id",
+      });
+    }
     res.status(500).send({
       success: false,
       message: "Error in Rating API",

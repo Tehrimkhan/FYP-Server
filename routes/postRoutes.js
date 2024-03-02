@@ -64,12 +64,14 @@ router.get("/filters/low-to-high-rent", lowtoHighRentController);
 router.get("/filters/high-to-low-rent", hightoLowRentController);
 
 // //Post Reviews
-router.put("/ratings/:id", isAuth, postRatingController);
+// router.put("/ratings/:id", isAuth, postRatingController);
+
+// router.put("/ratings/:id", isAuth, postReviewController);
 // Route for posting comments
 router.put("/comments/:id", isAuth, postCommentController);
 
-// // Route for posting ratings
-// router.put("/ratings/:id", isAuth, postRatingController);
+// Route for posting ratings
+router.put("/ratings/:id", isAuth, postRatingController);
 
 //EXPORT
 export default router;
