@@ -2,6 +2,8 @@ import userModel from "../models/userModel.js";
 import cloudinary from "cloudinary";
 import { getDataUri } from "../utils/feature.js";
 import multer from "multer";
+import Conversation from "../models/conversationModel.js";
+import messagesMdoel from "../models/messagesModel.js";
 
 // const imgconfig = multer.diskStorage({
 //   destination: (req, file, callback) => {
@@ -401,6 +403,89 @@ export const updateUserRoleController = async (req, res) => {
       success: false,
       message: "Error in Update User Role API",
       error,
+    });
+  }
+};
+export const getUserForSideBarController = async (req, res) => {
+  try {
+    const loggedInUserId = req.user._id;
+
+    const filteredUsers = await userModel
+      .find({
+        _id: { $ne: loggedInUserId },
+        role: { $ne: "admin" },
+      })
+      .select("-password -confirmPassword");
+
+    res.status(200).json({
+      success: true,
+      message: "User found successfully.",
+      filteredUsers,
+    });
+  } catch (error) {
+    console.error("Error in get User SideBar", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error in Get User Sidebar API",
+      error,
+    });
+  }
+};
+
+export const getChattedUsersController = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const conversations = await Conversation.find({
+      participants: userId,
+    }).populate("participants", "name email profileImage");
+
+    let chattedUsers = [];
+
+    for (const conversation of conversations) {
+      const participantIds = conversation.participants
+        .filter(
+          (participant) => participant._id.toString() !== userId.toString()
+        )
+        .map((participant) => participant._id);
+
+      const lastMessage = await messagesMdoel
+        .findOne({
+          $or: [
+            { senderId: participantIds[0] },
+            { receiverId: participantIds[0] },
+          ],
+        })
+        .sort({ createdAt: -1 })
+        .limit(1);
+
+      const chattedUser = {
+        participant: conversation.participants.find(
+          (participant) => participant._id.toString() !== userId.toString()
+        ),
+        lastMessage: lastMessage ? lastMessage.message : null,
+        lastMessageTimestamp: lastMessage ? lastMessage.createdAt : null,
+      };
+
+      chattedUsers.push(chattedUser);
+    }
+    chattedUsers.sort((a, b) => {
+      return (
+        new Date(b.lastMessageTimestamp) - new Date(a.lastMessageTimestamp)
+      );
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Chatted users fetched successfully.",
+      chattedUsers,
+    });
+  } catch (error) {
+    console.log("Error in getChattedUsersController:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching chatted users.",
+      error: error.message,
     });
   }
 };

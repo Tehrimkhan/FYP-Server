@@ -4,6 +4,8 @@ import {
   UploadImageController,
   deleteUserController,
   getAllUserController,
+  getChattedUsersController,
+  getUserForSideBarController,
   getUserProfileController,
   loginController,
   logoutController,
@@ -54,6 +56,11 @@ router.get("/get-all-users", getAllUserController);
 
 //UPDATE User role
 router.put("/updateUserRole", isAuth, isAdmin, updateUserRoleController);
+
+//For message
+router.get("/msgProfile", isAuth, getUserForSideBarController);
+
+router.get("/chatted-users", isAuth, getChattedUsersController);
 
 //export
 export default router;

@@ -8,6 +8,7 @@ import cloudinary from "cloudinary";
 import Stripe from "stripe";
 
 import connectDB from "./config/db.js";
+import { app, server } from "./socket/socket.js";
 //dot env config
 config();
 
@@ -25,7 +26,7 @@ cloudinary.v2.config({
 });
 
 //rest object
-const app = express();
+// const app = express();
 
 //middleware
 app.use(morgan("dev"));
@@ -43,11 +44,13 @@ import userRoutes from "./routes/userRoutes.js";
 import bannerImageRoute from "./routes/bannerImageRoute.js";
 import carpostRoutes from "./routes/carpostRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
+import messagesRoutes from "./routes/messagesRoutes.js";
 //route
 app.use("/api", userRoutes);
 app.use("/api/banner", bannerImageRoute);
 app.use("/api/post/car", carpostRoutes);
 app.use("/api/post", postRoutes);
+app.use("/api/messages", messagesRoutes);
 
 app.get("/", (req, res) => {
   return res.status(200).send("<h1>Welcome to node FlexShare</h1>");
@@ -57,7 +60,7 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 8080;
 
 //listen
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(
     `Server Running On PORT ${process.env.PORT} on ${process.env.NODE_ENV} mode`
       .bgMagenta.white
