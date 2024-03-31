@@ -85,7 +85,7 @@ export const getAdminPostController = async (req, res) => {
   try {
     const posts = await postModel
       .find()
-      .populate("postedBy", "_id name")
+      .populate("postedBy", "_id name profileImage")
       .sort({ createdAt: -1 });
     res.status(200).send({
       success: true,
@@ -113,7 +113,7 @@ export const getApprovedPostController = async (req, res) => {
           $options: "i",
         },
       })
-      .populate("postedBy", "_id name")
+      .populate("postedBy", "_id name profileImage")
       .sort({ rating: -1 });
 
     res.status(200).send({
@@ -331,7 +331,7 @@ export const stripePaymentController = async (req, res) => {
       payment_method_types: ["card"],
       line_items: [lineItem],
       mode: "payment",
-      success_url: data.success_url || "http://127.0.0.1:19006/MyAdsPage",
+      success_url: data.success_url || "http://192.168.0.107:8080/MyAdsPage",
       cancel_url: data.cancel_url || "http://127.0.0.1:19006/MyAdsPage",
     });
 
