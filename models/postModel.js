@@ -75,6 +75,24 @@ const postSchema = new mongoose.Schema(
     room: {
       type: String,
     },
+    color: {
+      type: String,
+    },
+    fabric: {
+      type: String,
+    },
+    size: {
+      type: String,
+    },
+    gender: {
+      type: String,
+    },
+    material: {
+      type: String,
+    },
+    style: {
+      type: String,
+    },
     rent: {
       type: String,
       required: [true, "Please Add Rent!"],
