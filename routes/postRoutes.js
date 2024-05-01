@@ -15,6 +15,7 @@ import {
   // postReviewController,
   stripePaymentController,
   updatePostStatusController,
+  changePostStatusController,
 } from "../controllers/postController.js";
 import { isAdmin, isAuth } from "../middlewares/authMiddleware.js";
 import { multipleUpload } from "../middlewares/multer.js";
@@ -72,6 +73,8 @@ router.put("/comments/:id", isAuth, postCommentController);
 
 // Route for posting ratings
 router.put("/ratings/:id", isAuth, postRatingController);
+
+router.put("/status/:id", isAuth, changePostStatusController);
 
 //EXPORT
 export default router;

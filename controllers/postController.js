@@ -76,6 +76,7 @@ export const createPostController = async (req, res) => {
       description,
       postedBy: req.user._id,
       status: "pending",
+      active: true,
     }).save();
     res.status(201).send({
       sucess: true,
@@ -120,6 +121,7 @@ export const getApprovedPostController = async (req, res) => {
     const approvedPosts = await postModel
       .find({
         status: "approved",
+        active: true, // Filter out inactive posts
         name: {
           $regex: keyword ? keyword : "",
           $options: "i",
@@ -672,6 +674,48 @@ export const hightoLowRentController = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Error In Filter API",
+      error,
+    });
+  }
+};
+
+export const changePostStatusController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { active } = req.body;
+
+    const post = await postModel.findById(id);
+
+    // Check if the post exists
+    if (!post) {
+      return res.status(404).send({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    // Check if the user trying to change the status is the one who posted it
+    if (post.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).send({
+        success: false,
+        message: "You are not authorized to change the status of this post",
+      });
+    }
+
+    // Update the active status of the post
+    post.active = active;
+    await post.save();
+
+    res.status(200).send({
+      success: true,
+      message: `Post ${active ? "activated" : "deactivated"} successfully`,
+      post,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in changing post status",
       error,
     });
   }
