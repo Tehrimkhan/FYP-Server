@@ -16,6 +16,10 @@ import {
   stripePaymentController,
   updatePostStatusController,
   changePostStatusController,
+  getTotalPostsAndNameCounts,
+  getUserPostCountController,
+  getInactivePostCountController,
+  getNumberOfPaymentsController,
 } from "../controllers/postController.js";
 import { isAdmin, isAuth } from "../middlewares/authMiddleware.js";
 import { multipleUpload } from "../middlewares/multer.js";
@@ -75,6 +79,14 @@ router.put("/comments/:id", isAuth, postCommentController);
 router.put("/ratings/:id", isAuth, postRatingController);
 
 router.put("/status/:id", isAuth, changePostStatusController);
+
+router.get("/postcount", getTotalPostsAndNameCounts);
+
+router.get("/user-postcount", isAuth, getUserPostCountController);
+
+router.get("/inactive-postcount", getInactivePostCountController);
+
+router.get("/paymentscount", getNumberOfPaymentsController);
 
 //EXPORT
 export default router;

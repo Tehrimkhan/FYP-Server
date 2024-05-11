@@ -5,6 +5,7 @@ import {
   deleteUserController,
   getAllUserController,
   getChattedUsersController,
+  getTotalUsersController,
   getUserForSideBarController,
   getUserProfileController,
   loginController,
@@ -17,6 +18,7 @@ import {
 } from "../controllers/userController.js";
 import { isAdmin, isAuth } from "../middlewares/authMiddleware.js";
 import { singleUpload } from "../middlewares/multer.js";
+import { getUserPostCountController } from "../controllers/postController.js";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -61,6 +63,10 @@ router.put("/updateUserRole", isAuth, isAdmin, updateUserRoleController);
 router.get("/msgProfile", isAuth, getUserForSideBarController);
 
 router.get("/chatted-users", isAuth, getChattedUsersController);
+
+router.get("/usercount", getTotalUsersController);
+
+router.get("/user-post-count/:userId", isAuth, getUserPostCountController);
 
 //export
 export default router;

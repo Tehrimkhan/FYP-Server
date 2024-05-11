@@ -489,3 +489,22 @@ export const getChattedUsersController = async (req, res) => {
     });
   }
 };
+
+export const getTotalUsersController = async (req, res) => {
+  try {
+    const totalUsersCount = await userModel.countDocuments();
+
+    res.status(200).json({
+      success: true,
+      message: "Total number of users fetched successfully.",
+      totalUsersCount,
+    });
+  } catch (error) {
+    console.error("Error fetching total number of users:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching total number of users.",
+      error: error.message,
+    });
+  }
+};

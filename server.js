@@ -49,12 +49,14 @@ import bannerImageRoute from "./routes/bannerImageRoute.js";
 import carpostRoutes from "./routes/carpostRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import messagesRoutes from "./routes/messagesRoutes.js";
+import rentedInfoRoute from "./routes/rentedInfoRoute.js";
 //route
 app.use("/api", userRoutes);
 app.use("/api/banner", bannerImageRoute);
 app.use("/api/post/car", carpostRoutes);
 app.use("/api/post", postRoutes);
 app.use("/api/messages", messagesRoutes);
+app.use("/api/renter", rentedInfoRoute);
 
 app.get("/", (req, res) => {
   return res.status(200).send("<h1>Welcome to node FlexShare</h1>");

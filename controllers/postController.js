@@ -345,7 +345,7 @@ export const stripePaymentController = async (req, res) => {
       payment_method_types: ["card"],
       line_items: [lineItem],
       mode: "payment",
-      success_url: data.success_url || "http://192.168.0.107:8080/MyAdsPage",
+      success_url: data.success_url || "http://127.0.0.1:19006/MyAdsPage",
       cancel_url: data.cancel_url || "http://127.0.0.1:19006/MyAdsPage",
     });
 
@@ -716,6 +716,128 @@ export const changePostStatusController = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Error in changing post status",
+      error,
+    });
+  }
+};
+
+export const getTotalPostsAndNameCounts = async (req, res) => {
+  try {
+    // Fetch all documents
+    const allPosts = await postModel.find();
+
+    // Filter out inactive documents
+    const activePosts = allPosts.filter((post) => post.active);
+
+    // Count total active posts
+    const totalPostsCount = activePosts.length;
+
+    // Aggregate count of active posts by title
+    const nameCounts = activePosts.reduce((counts, post) => {
+      counts[post.title] = (counts[post.title] || 0) + 1;
+      return counts;
+    }, {});
+
+    const response = {
+      totalPostsCount,
+      nameCounts,
+    };
+
+    res.status(200).send({
+      success: true,
+      message: "Total number of posts and name counts",
+      data: response,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in getting total posts and name counts",
+      error,
+    });
+  }
+};
+
+export const getUserPostCountController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Fetch all posts for the user
+    const userPosts = await postModel.find({ postedBy: userId });
+
+    // Initialize an empty object to store name counts
+    const nameCounts = {};
+
+    // Count the number of posts for each title
+    userPosts.forEach((post) => {
+      const title = post.title;
+      if (nameCounts[title]) {
+        nameCounts[title]++;
+      } else {
+        nameCounts[title] = 1;
+      }
+    });
+
+    // Calculate the total number of user posts
+    const totalUserPostsCount = userPosts.length;
+
+    const response = {
+      totalPostsCount: totalUserPostsCount,
+      nameCounts: Object.entries(nameCounts).map(([title, count]) => ({
+        _id: title,
+        count: count,
+      })),
+    };
+
+    res.status(200).send({
+      success: true,
+      message: "Total number of user posts and name counts",
+      data: response,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in getting user posts and name counts",
+      error,
+    });
+  }
+};
+
+export const getInactivePostCountController = async (req, res) => {
+  try {
+    // Find inactive posts
+    const inactivePostsCount = await postModel.countDocuments({
+      active: false,
+    });
+
+    res.status(200).send({
+      success: true,
+      message: "Number of inactive posts",
+      count: inactivePostsCount,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in getting inactive post count",
+      error,
+    });
+  }
+};
+export const getNumberOfPaymentsController = async (req, res) => {
+  try {
+    const numberOfPayments = await PaymentTransactionModel.countDocuments();
+    res.status(200).send({
+      success: true,
+      message: "Number of payments done",
+      count: numberOfPayments,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in getting the number of payments",
       error,
     });
   }
